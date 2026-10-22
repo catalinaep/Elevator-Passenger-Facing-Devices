@@ -1,18 +1,68 @@
+/**
+ * This is the working gui for the floor panel. this class can integrate javafx objects. we need to
+ * give functionality to this api.
+ */
 public class FloorPanel {
+    private static boolean alarmOn;
 
-    public boolean upBtnPressed(int floorNum){return false;}
+    /**
+     * Checks if the up button has been pressed at a given floor.
+     * ex. was the button pressed on floor 10?
+     * @param floorNum The floor 1-10 in the building
+     * @return True if pressed, false otherwise
+     */
+    public boolean upBtnPressed(int floorNum){
+        //TODO write code that queries if the up button has been pressed
+        return false;
+    }
 
-    public boolean downBtnPressed(int floorNum){return false;}
+    /**
+     * Checks if the down button has been pressed at a given floor.
+     * ex. was the button pressed on floor 10?
+     * @param floorNum The floor 1-10 in the building
+     * @return True if pressed, false otherwise
+     */
+    public boolean downBtnPressed(int floorNum){
+        //TODO write code that queries if the up button has been pressed
+        return false;
+    }
 
-    public void resetUpBtn(){}
+    /**
+     * Resets the up button boolean to false, so basically removes the action
+     */
+    public void resetUpBtn(){
+        //TODO write body
+    }
 
-    public void resetDownBtn(){}
+    /**
+     * Resets the up button boolean to false, so basically removes the action
+     */
+    public void resetDownBtn(){
+        //TODO write body
+    }
 
-    public boolean alarmPressed(){return false;}
+    /**
+     * Checks if the alarm button was pressed. All alarms are connected so we refer to the
+     * static alarmOn variable.
+     * @return True if pressed, false otherwise
+     */
+    public static boolean alarmPressed(){
+        //TODO write body should check the alarm button in javafx gui
+        return alarmOn;}
 
-    public void resetAlarm(){}
+    /**
+     * Resets the state of the alarm button
+     */
+    public void resetAlarm(){
+        //TODO write code to reset the button
+    }
 
-    public void ding(){}
+    /**
+     * Plays a ding sound
+     */
+    public void ding(){
+        //TODO figure out how to add an audio resource and connect it to javafx
+    }
 
 
 }
