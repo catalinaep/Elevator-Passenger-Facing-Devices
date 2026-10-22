@@ -1,3 +1,5 @@
+package Panel;
+
 /**
  * This is the working gui for the floor panel. this class can integrate javafx objects. we need to
  * give functionality to this api.
@@ -58,7 +60,7 @@ public class FloorPanel {
     }
 
     /**
-     * Plays a ding sound
+     * Plays a ding sound to alert passengers of elevator's arrival
      */
     public void ding(){
         //TODO figure out how to add an audio resource and connect it to javafx

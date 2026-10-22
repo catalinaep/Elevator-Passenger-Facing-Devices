@@ -1,4 +1,4 @@
-//TODO guys should we make the floor number an enum so we can do a switch to check if pressed? thoughts
+package Panel;//TODO guys should we make the floor number an enum so we can do a switch to check if pressed? thoughts
 /**
  * This is the working gui for the floor panel. this class can integrate javafx objects. we need to
  * give functionality to this api.
