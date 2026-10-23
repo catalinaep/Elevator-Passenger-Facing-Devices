@@ -1,11 +1,24 @@
 package Panel;
 
+import javafx.application.Application;
+import javafx.beans.property.BooleanProperty;
+import javafx.stage.Stage;
+
 /**
  * This is the working gui for the floor panel. this class can integrate javafx objects. we need to
  * give functionality to this api.
  */
-public class FloorPanel {
-    private static boolean alarmOn;
+public class FloorPanel extends Application {
+    private final String floorNumber;
+    //using BooleanProperty to bind with a toggle button
+    private static BooleanProperty alarmOn;
+    private BooleanProperty upBtn;
+    private BooleanProperty downBtn;
+
+    public FloorPanel(String floorNumber) {
+
+    }
+
 
     /**
      * Checks if the up button has been pressed at a given floor.
@@ -67,4 +80,8 @@ public class FloorPanel {
     }
 
 
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+
+    }
 }
