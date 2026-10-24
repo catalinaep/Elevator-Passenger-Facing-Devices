@@ -5,6 +5,15 @@ package Panel;//TODO guys should we make the floor number an enum so we can do a
  */
 public class ElevatorPanel {
 
+    private final int elevatorNumber;
+    private final ElevatorPanelGUI gui;
+
+
+    public ElevatorPanel(int elevatorNumber, ElevatorPanelGUI gui) {
+        this.elevatorNumber = elevatorNumber;
+        this.gui = gui;
+    }
+
     /**
      * Checks if the key gui component has been interacted with. IDK if a button or some other object would work better.
      * @return True if inserted, false otherwise
