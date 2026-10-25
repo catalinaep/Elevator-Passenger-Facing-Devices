@@ -4,6 +4,7 @@ import Panel.ElevatorPanel;
 import Panel.ElevatorPanelGUI;
 
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderImage;
 import javafx.scene.layout.BorderPane;
@@ -20,6 +21,7 @@ public class Main extends Application {
         // Create the root layout
         stage.setTitle("Elevator Panel");
         VBox root = new VBox(10);
+        root.setAlignment(Pos.CENTER);
 
         // Create the panel and its GUI
         ElevatorPanelGUI gui = new ElevatorPanelGUI();
@@ -29,7 +31,7 @@ public class Main extends Application {
         root.getChildren().add(gui.getView());
 
         // Create the scene and display the window
-        Scene scene = new Scene(root, 100, 800);
+        Scene scene = new Scene(root, 400, 800);
         stage.setTitle("Elevator Panel");
         stage.setScene(scene);
         stage.show();
