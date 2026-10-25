@@ -81,16 +81,21 @@ public class FloorPanel {
     }
 
     private void createGUIComponents() {
+        //TODO style and add elevator number
         //create up, down, and alarm buttons
         Button upBtn= new Button("up");
         upBtn.setOnAction(event -> {
-            up.setValue(true);
+            if (!down.getValue()) {
+                up.setValue(true);
+            }
             System.out.println("up button pressed");
         });
 
         Button downBtn = new Button("down");
         downBtn.setOnAction(event -> {
-            down.setValue(true);
+            if (!up.getValue()) {
+                down.setValue(true);
+            }
             System.out.println("down button pressed");
         });
 
