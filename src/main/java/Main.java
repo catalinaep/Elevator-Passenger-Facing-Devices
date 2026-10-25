@@ -1,6 +1,3 @@
-
-package testing;
-
 import Panel.FloorPanel;
 import javafx.application.Application;
 import javafx.geometry.Insets;
