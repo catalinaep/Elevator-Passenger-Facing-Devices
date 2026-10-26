@@ -20,37 +20,35 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
- * JavaFX view for one elevator-car panel.
- * The ElevatorPanel class owns the device state and uses this class to render it.
+ * The JavaFX view for the elevator panel, configures all of the visual components
  */
 public class ElevatorPanelGUI {
+
+    /**
+     * The enum that holds information associated with an elevator direction
+     */
     public enum Direction {
         IDLE("IDLE"),
         UP("UP"),
         DOWN("DOWN");
-
         private final String displayText;
 
         Direction(String displayText) {
             this.displayText = displayText;
         }
 
-        public String getDisplayText() {
-            return displayText;
-        }
+        // get the text display for that direction
+        public String getDisplayText() { return displayText;}
 
+        // get the direction it is heading or the status
         public static Direction fromText(String value) {
-            if (value == null) {
-                throw new IllegalArgumentException("Direction cannot be null.");
-            }
+            if (value == null) throw new IllegalArgumentException("Direction cannot be null.");
 
             return switch (value.trim().toLowerCase(Locale.ROOT)) {
                 case "up", "going up" -> UP;
                 case "down", "going down" -> DOWN;
                 case "idle", "stopped", "stop", "" -> IDLE;
-                default -> throw new IllegalArgumentException(
-                        "Direction must be UP, DOWN, or IDLE: " + value
-                );
+                default -> throw new IllegalArgumentException("Direction must be UP, DOWN, or IDLE: " + value);
             };
         }
     }
@@ -58,14 +56,15 @@ public class ElevatorPanelGUI {
     public static final int MIN_FLOOR = 1;
     public static final int MAX_FLOOR = 10;
 
-    /* Files placed in src/main/resources are loaded from the classpath. */
-    static final String UP_ARROW_OFF_IMAGE_PATH = "/arrow-up-off.png";
-    static final String UP_ARROW_ON_IMAGE_PATH = "/arrow-up-on.png";
-    static final String DOWN_ARROW_OFF_IMAGE_PATH = "/arrow-down-off.png";
-    static final String DOWN_ARROW_ON_IMAGE_PATH = "/arrow-down-on.png";
-    private static final String FLOOR_BUTTON_OFF_IMAGE_PATTERN = "/buttons-grey/%d.png";
-    private static final String FLOOR_BUTTON_ON_IMAGE_PATTERN = "/buttons-green/%d-green.png";
+    // file paths for arrows and buttons
+    static final String UP_ARROW_OFF = "/arrow-up-off.png";
+    static final String UP_ARROW_ON = "/arrow-up-on.png";
+    static final String DOWN_ARROW_OFF = "/arrow-down-off.png";
+    static final String DOWN_ARROW_ON = "/arrow-down-on.png";
+    private static final String FLOOR_BUTTON_OFF = "/buttons-grey/%d.png";
+    private static final String FLOOR_BUTTON_ON = "/buttons-green/%d-green.png";
 
+    // styles for each type of arrow and button
     private static final String FLOOR_BUTTON_OFF_STYLE = """
             -fx-background-color: #f4f4f4;
             -fx-border-color: #232323;
@@ -117,11 +116,9 @@ public class ElevatorPanelGUI {
             -fx-text-fill: #222222;
             """;
 
-    private static final String[] BUTTON_IDS = {
-            null,
+    private static final String[] BUTTON_IDS = {null,
             "firstFloor", "secondFloor", "thirdFloor", "fourthFloor", "fifthFloor",
-            "sixthFloor", "seventhFloor", "eighthFloor", "ninthFloor", "tenthFloor"
-    };
+            "sixthFloor", "seventhFloor", "eighthFloor", "ninthFloor", "tenthFloor"};
 
     private final Label elevatorNumberLabel = new Label("ELEVATOR");
     private final Label floorLabel = new Label("1");
@@ -131,7 +128,7 @@ public class ElevatorPanelGUI {
     private final ToggleButton keyButton = new ToggleButton("KEY");
     private final ToggleButton buzzerButton = new ToggleButton("BUZZER");
     private final Map<Integer, Button> floorButtons = new LinkedHashMap<>();
-    private final Map<Integer, Boolean> floorButtonLit = new LinkedHashMap<>();
+    private final Map<Integer, Boolean> floorButtonStatus = new LinkedHashMap<>();
     private final Map<String, Integer> floorsByButtonId = new LinkedHashMap<>();
     private final VBox view = new VBox();
 
@@ -142,28 +139,34 @@ public class ElevatorPanelGUI {
     private int elevatorNumber;
 
     public ElevatorPanelGUI() {
-        upIndicator = createDirectionIndicator(UP_ARROW_OFF_IMAGE_PATH);
-        downIndicator = createDirectionIndicator(DOWN_ARROW_OFF_IMAGE_PATH);
+        upIndicator = createDirectionIndicator(UP_ARROW_OFF);
+        downIndicator = createDirectionIndicator(DOWN_ARROW_OFF);
         buildView();
         setDirection(Direction.IDLE);
         setKeyInserted(false);
         setBuzzerOn(false);
     }
 
+    /**
+     * Make the elevator panel display with all of its elements
+     */
     private void buildView() {
         GridPane grid = new GridPane();
         grid.setHgap(6);
         grid.setVgap(6);
         grid.setAlignment(Pos.CENTER);
 
+        // elevator number label
         elevatorNumberLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         GridPane.setColumnSpan(elevatorNumberLabel, 2);
         grid.add(elevatorNumberLabel, 0, 0);
 
+        // floor number label
         Label displayTitle = sectionLabel("CURRENT FLOOR");
         GridPane.setColumnSpan(displayTitle, 2);
         grid.add(displayTitle, 0, 1);
 
+        // actual floor number display
         floorLabel.setAlignment(Pos.CENTER);
         floorLabel.setMinSize(122, 92);
         floorLabel.setMaxSize(122, 92);
@@ -179,33 +182,35 @@ public class ElevatorPanelGUI {
         GridPane.setColumnSpan(floorLabel, 2);
         grid.add(floorLabel, 0, 2);
 
+        // direction label style and grid
         directionLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4b4b4b;");
         GridPane.setColumnSpan(directionLabel, 2);
         grid.add(directionLabel, 0, 3);
         grid.add(upIndicator, 0, 4);
         grid.add(downIndicator, 1, 4);
 
+        // title for the buttons
         Label buttonTitle = sectionLabel("SELECT FLOOR");
         GridPane.setColumnSpan(buttonTitle, 2);
         grid.add(buttonTitle, 0, 5);
 
+        // loop to place all of the floor change buttons
         for (int floor = MIN_FLOOR; floor <= MAX_FLOOR; floor++) {
             Button button = createFloorButton(floor);
             floorButtons.put(floor, button);
-            floorButtonLit.put(floor, false);
+            floorButtonStatus.put(floor, false);
             floorsByButtonId.put(getButtonIdAtFloor(floor), floor);
 
             int index = floor - MIN_FLOOR;
             grid.add(button, index % 2, 6 + index / 2);
         }
 
+        // set key and buzzer buttons up
         configureSmallControl(keyButton);
         configureSmallControl(buzzerButton);
         keyButton.setOnAction(event -> {
             applyControlStyle(keyButton);
-            if (keyHandler != null) {
-                keyHandler.accept(keyButton.isSelected());
-            }
+            if (keyHandler != null) { keyHandler.accept(keyButton.isSelected()); }
         });
         buzzerButton.setOnAction(event -> {
             applyControlStyle(buzzerButton);
@@ -222,12 +227,14 @@ public class ElevatorPanelGUI {
         view.getChildren().add(grid);
     }
 
+    // make a label for one section
     private static Label sectionLabel(String text) {
         Label label = new Label(text);
         label.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #4b4b4b;");
         return label;
     }
 
+    // make one button for a floor with the floor number
     private Button createFloorButton(int floor) {
         Button button = new Button();
         button.setMinSize(58, 48);
@@ -242,6 +249,7 @@ public class ElevatorPanelGUI {
         return button;
     }
 
+    // make the button that shows the direction
     private Button createDirectionIndicator(String imagePath) {
         Button button = new Button();
         button.setMinSize(58, 40);
@@ -252,125 +260,109 @@ public class ElevatorPanelGUI {
         return button;
     }
 
+    // make the style for a small button
     private static void configureSmallControl(ToggleButton button) {
         button.setMinSize(58, 30);
         button.setMaxSize(58, 30);
         button.setFocusTraversable(false);
     }
 
+    // toggle whether a button is on or off
     private static void applyControlStyle(ToggleButton button) {
         button.setStyle(button.isSelected() ? CONTROL_ON_STYLE : CONTROL_OFF_STYLE);
     }
 
-    public VBox getView() {
-        return view;
-    }
+    // panel GUI info
+    public VBox getView() { return view; }
+    public int getElevatorNumber() { return elevatorNumber; }
 
+    // set the label for the elevator number
     public void setElevatorNumber(int elevatorNumber) {
-        if (elevatorNumber < 1) {
-            throw new IllegalArgumentException("Elevator number must be positive.");
-        }
+        if (elevatorNumber < 1) throw new IllegalArgumentException("Elevator number must be positive.");
         this.elevatorNumber = elevatorNumber;
         elevatorNumberLabel.setText("ELEVATOR " + elevatorNumber);
     }
 
-    public int getElevatorNumber() {
-        return elevatorNumber;
-    }
+    /** setters for GUI handlers */
+    public void setButtonHandler(IntConsumer buttonHandler) { this.buttonHandler = buttonHandler; }
+    public void setKeyHandler(Consumer<Boolean> keyHandler) { this.keyHandler = keyHandler; }
+    public void setBuzzerHandler(Consumer<Boolean> buzzerHandler) {this.buzzerHandler = buzzerHandler; }
 
-    public void setButtonHandler(IntConsumer buttonHandler) {
-        this.buttonHandler = buttonHandler;
-    }
-
-    public void setKeyHandler(Consumer<Boolean> keyHandler) {
-        this.keyHandler = keyHandler;
-    }
-
-    public void setBuzzerHandler(Consumer<Boolean> buzzerHandler) {
-        this.buzzerHandler = buzzerHandler;
-    }
-
+    /** update the display of what floor we're on, either string or int input */
     public void updateFloorDisplay(String floor) {
         if (floor == null || floor.isBlank()) {
             throw new IllegalArgumentException("Floor display text cannot be blank.");
         }
         floorLabel.setText(floor.trim());
     }
-
     public void updateFloorDisplay(int floor) {
         checkFloor(floor);
         updateFloorDisplay(String.valueOf(floor));
     }
 
-    /** Exactly one direction arrow glows while moving; neither glows while idle. */
+    /** One direction arrow glows while moving */
     public void setDirection(Direction newDirection) {
         direction = Objects.requireNonNull(newDirection, "Direction cannot be null.");
         directionLabel.setText(direction.getDisplayText());
         upIndicator.setStyle(direction == Direction.UP ? ARROW_ON_STYLE : ARROW_OFF_STYLE);
         downIndicator.setStyle(direction == Direction.DOWN ? ARROW_ON_STYLE : ARROW_OFF_STYLE);
-        setArrowGraphic(upIndicator,
-                direction == Direction.UP ? UP_ARROW_ON_IMAGE_PATH : UP_ARROW_OFF_IMAGE_PATH);
-        setArrowGraphic(downIndicator,
-                direction == Direction.DOWN ? DOWN_ARROW_ON_IMAGE_PATH : DOWN_ARROW_OFF_IMAGE_PATH);
+        setArrowGraphic(upIndicator, direction == Direction.UP ? UP_ARROW_ON : UP_ARROW_OFF);
+        setArrowGraphic(downIndicator, direction == Direction.DOWN ? DOWN_ARROW_ON : DOWN_ARROW_OFF);
     }
 
-    public void updateDirDisplay(String directionText) {
-        setDirection(Direction.fromText(directionText));
-    }
+    // update direction
+    public void updateDirDisplay(String directionText) { setDirection(Direction.fromText(directionText)); }
 
-    public Direction getDirection() {
-        return direction;
-    }
+    // get direction
+    public Direction getDirection() { return direction; }
 
-    public void setFloorButtonLit(int floor, boolean lit) {
+    /** set if floor button is on/off */
+    public void setFloorButtonStatus(int floor, boolean status) {
         checkFloor(floor);
-        floorButtonLit.put(floor, lit);
-        floorButtons.get(floor).setStyle(lit ? FLOOR_BUTTON_ON_STYLE : FLOOR_BUTTON_OFF_STYLE);
-        setFloorButtonGraphic(floorButtons.get(floor), floor, lit);
+        floorButtonStatus.put(floor, status);
+        floorButtons.get(floor).setStyle(status ? FLOOR_BUTTON_ON_STYLE : FLOOR_BUTTON_OFF_STYLE);
+        setFloorButtonGraphic(floorButtons.get(floor), floor, status);
     }
 
-    public boolean isFloorButtonLit(int floor) {
+    // check a floor button status of on or off
+    public boolean floorButtonStaus(int floor) {
         checkFloor(floor);
-        return floorButtonLit.get(floor);
+        return floorButtonStatus.get(floor);
     }
 
+    // set key inserted as true/false
     public void setKeyInserted(boolean inserted) {
         keyButton.setSelected(inserted);
         applyControlStyle(keyButton);
     }
 
+    // check if key is inserted
     public boolean isKeyInserted() {
         return keyButton.isSelected();
     }
 
+    /** set the buzzer on and check its status and the button id at a floor */
     public void setBuzzerOn(boolean on) {
         buzzerButton.setSelected(on);
         applyControlStyle(buzzerButton);
     }
+    public boolean isBuzzerOn() { return buzzerButton.isSelected();}
 
-    public boolean isBuzzerOn() {
-        return buzzerButton.isSelected();
-    }
-
-    public int getButtonIdAtFloor(String buttonId) {
-        return floorsByButtonId.getOrDefault(buttonId, -1);
-    }
-
+    /** get the button id at a floor with different parameters */
+    public int getButtonIdAtFloor(String buttonId) { return floorsByButtonId.getOrDefault(buttonId, -1);}
     public String getButtonIdAtFloor(int floor) {
         checkFloor(floor);
         return BUTTON_IDS[floor];
     }
 
+    /**
+     * Make an image from a file path and the width and height
+     */
     private ImageView createImage(String imagePath, double width, double height) {
-        if (imagePath == null || imagePath.isBlank()) {
-            return null;
-        }
+        if (imagePath == null || imagePath.isBlank()) return null;
 
         try (InputStream stream = getClass().getResourceAsStream(imagePath)) {
-            if (stream == null) {
-                return null;
-            }
-
+            if (stream == null) return null;
             ImageView imageView = new ImageView(new Image(stream));
             imageView.setFitWidth(width);
             imageView.setFitHeight(height);
@@ -381,25 +373,24 @@ public class ElevatorPanelGUI {
         }
     }
 
+    /** set the image for an arrow display */
     private void setArrowGraphic(Button button, String imagePath) {
         ImageView arrowImage = createImage(imagePath, 28, 28);
         button.setText("");
         button.setGraphic(arrowImage);
     }
 
+    /** set the image for a floor button */
     private void setFloorButtonGraphic(Button button, int floor, boolean lit) {
-        String imagePath = lit
-                ? FLOOR_BUTTON_ON_IMAGE_PATTERN.formatted(floor)
-                : FLOOR_BUTTON_OFF_IMAGE_PATTERN.formatted(floor);
+        String imagePath = lit ? FLOOR_BUTTON_ON.formatted(floor) : FLOOR_BUTTON_OFF.formatted(floor);
         button.setText("");
         button.setGraphic(createImage(imagePath, 46, 36));
     }
 
+    /** check if a floor number is valid */
     private static void checkFloor(int floor) {
         if (floor < MIN_FLOOR || floor > MAX_FLOOR) {
-            throw new IllegalArgumentException(
-                    "Floor number must be between " + MIN_FLOOR + " and " + MAX_FLOOR + "."
-            );
+            throw new IllegalArgumentException("Floor number must be between " + MIN_FLOOR + " and " + MAX_FLOOR + ".");
         }
     }
 }

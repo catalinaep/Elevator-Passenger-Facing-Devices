@@ -20,12 +20,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * JavaFX landing panel for one floor. The panel shows four elevator-status
- * rows above the call buttons, while retaining state for its own calls/alarm.
+ * The panel for one floor that shows the status of the 4 elevators
  */
 public class FloorPanel {
     public static final int ELEVATOR_COUNT = 4;
 
+    // set the styles of all the arrows for the GUI
     private static final String ARROW_OFF_STYLE = """
             -fx-background-color: #f4f4f4;
             -fx-border-color: #232323;
@@ -80,46 +80,32 @@ public class FloorPanel {
         if (floorNumber == null || floorNumber.isBlank()) {
             throw new IllegalArgumentException("Floor number cannot be blank.");
         }
-
         this.floorNumber = floorNumber.trim();
         createGUIComponents();
     }
 
-    public FloorPanel() {
-        this("1");
-    }
+    /** getters for button info */
+    public boolean upBtnPressed() { return up.get(); }
+    public boolean downBtnPressed() { return down.get(); }
 
-    public boolean upBtnPressed() {
-        return up.get();
-    }
-
-    public boolean downBtnPressed() {
-        return down.get();
-    }
-
+    /** reset the request buttons */
     public void resetUpBtn() {
         up.set(false);
         updateArrowStyles();
     }
-
     public void resetDownBtn() {
         down.set(false);
         updateArrowStyles();
     }
 
-    public boolean alarmPressed() {
-        return alarmOn.get();
-    }
-
-    public void resetAlarm() {
-        setAlarmOn(false);
-    }
-
-    /** The landing alarm acts as an on/off toggle for this particular floor. */
-    public void toggleAlarm() {
-        setAlarmOn(!alarmOn.get());
-    }
-
+    /** change and get alarm status for various needs*/
+    // check if alarm is pressed
+    public boolean alarmPressed() { return alarmOn.get(); }
+    // reset the alarm to off
+    public void resetAlarm() { setAlarmOn(false); }
+    // switch the status of the alarm to opposite state
+    public void toggleAlarm() { setAlarmOn(!alarmOn.get()); }
+    // turn the alarm on
     public void setAlarmOn(boolean on) {
         alarmOn.set(on);
         updateAlarmStyle();
@@ -128,10 +114,8 @@ public class FloorPanel {
         }
     }
 
-    /** One-time arrival sound; the outside panel has no sustained buzzer. */
-    public void ding() {
-        SoundEffects.playDing();
-    }
+    /** play the arrival sound */
+    public void ding() { SoundEffects.playDing(); }
 
     /** Changes the lit call-arrow state. IDLE clears both arrow buttons. */
     public void updateDirection(ElevatorPanelGUI.Direction direction) {
@@ -141,59 +125,60 @@ public class FloorPanel {
         updateArrowStyles();
     }
 
+    // update the direction display
     public void updateDirection(String directionText) {
         updateDirection(ElevatorPanelGUI.Direction.fromText(directionText));
     }
 
     /**
-     * Updates one row in the four-elevator status board. This is separate from
-     * the landing call buttons because a call direction is not the same thing
-     * as the direction in which every elevator is currently travelling.
+     * Update the status for one elevator in the floor panel display
+     * Needs the number of the elevator, the floor it is on, and the direction it is going
      */
-    public void updateElevatorStatus(
-            int elevatorNumber,
-            int currentFloor,
-            ElevatorPanelGUI.Direction direction
-    ) {
+    public void updateElevatorStatus(int elevatorNumber, int currentFloor, ElevatorPanelGUI.Direction direction) {
         checkElevatorNumber(elevatorNumber);
         checkFloor(currentFloor);
         Objects.requireNonNull(direction, "Direction cannot be null.");
-
         elevatorFloorDisplays.get(elevatorNumber).setText(String.valueOf(currentFloor));
         setStatusDirectionGraphic(elevatorDirectionDisplays.get(elevatorNumber), direction);
         elevatorDirections.put(elevatorNumber, direction);
     }
 
+    // get the direction of travel for an elevator number
     public ElevatorPanelGUI.Direction getElevatorDirection(int elevatorNumber) {
         checkElevatorNumber(elevatorNumber);
         return elevatorDirections.get(elevatorNumber);
     }
 
+    // get the display for an elevator number
     public String getElevatorFloorDisplay(int elevatorNumber) {
         checkElevatorNumber(elevatorNumber);
         return elevatorFloorDisplays.get(elevatorNumber).getText();
     }
 
+    // the handler takes care of changing directions
     public void setDirectionRequestHandler(Consumer<ElevatorPanelGUI.Direction> handler) {
         directionRequestHandler = handler;
     }
 
-    /** Receives this panel's floor number and the new alarm state. */
-    public void setAlarmHandler(BiConsumer<String, Boolean> handler) {
-        alarmHandler = handler;
-    }
+    /** gets the floor number for this panel and the alarm state */
+    public void setAlarmHandler(BiConsumer<String, Boolean> handler) { alarmHandler = handler; }
 
+    /**
+     * Make all the components of the GUI for the floor panel specifically
+     */
     private void createGUIComponents() {
         GridPane grid = new GridPane();
         grid.setHgap(7);
         grid.setVgap(6);
         grid.setAlignment(Pos.CENTER);
 
+        // adjust the title
         Label title = new Label("FLOOR " + floorNumber);
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         GridPane.setColumnSpan(title, 3);
         grid.add(title, 0, 0);
 
+        // adjust the status title
         Label statusTitle = sectionLabel("ELEVATOR STATUS");
         GridPane.setColumnSpan(statusTitle, 3);
         grid.add(statusTitle, 0, 1);
@@ -201,6 +186,7 @@ public class FloorPanel {
         grid.add(statusHeader("FLOOR"), 1, 2);
         grid.add(statusHeader("DIRECTION"), 2, 2);
 
+        // set the elevator information for each individual elevator
         for (int elevator = 1; elevator <= ELEVATOR_COUNT; elevator++) {
             int row = elevator + 2;
             Label elevatorLabel = statusCell(String.valueOf(elevator));
@@ -221,6 +207,7 @@ public class FloorPanel {
         GridPane.setColumnSpan(callTitle, 3);
         grid.add(callTitle, 0, 7);
 
+        // set the style for the floor display label
         Label floorDisplay = new Label(floorNumber);
         floorDisplay.setAlignment(Pos.CENTER);
         floorDisplay.setMinSize(130, 92);
@@ -238,8 +225,8 @@ public class FloorPanel {
         GridPane.setRowSpan(floorDisplay, 2);
         grid.add(floorDisplay, 0, 8);
 
-        upButton = createArrowButton(ElevatorPanelGUI.UP_ARROW_OFF_IMAGE_PATH);
-        downButton = createArrowButton(ElevatorPanelGUI.DOWN_ARROW_OFF_IMAGE_PATH);
+        upButton = createArrowButton(ElevatorPanelGUI.UP_ARROW_OFF);
+        downButton = createArrowButton(ElevatorPanelGUI.DOWN_ARROW_OFF);
         upButton.setOnAction(event -> requestDirection(ElevatorPanelGUI.Direction.UP));
         downButton.setOnAction(event -> requestDirection(ElevatorPanelGUI.Direction.DOWN));
         grid.add(upButton, 2, 8);
@@ -259,12 +246,14 @@ public class FloorPanel {
         updateAlarmStyle();
     }
 
+    /** make the section display */
     private static Label sectionLabel(String text) {
         Label label = new Label(text);
         label.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #4b4b4b;");
         return label;
     }
 
+    /** make the status display */
     private static Label statusHeader(String text) {
         Label label = new Label(text);
         label.setMinWidth(62);
@@ -273,6 +262,7 @@ public class FloorPanel {
         return label;
     }
 
+    /** make the status cell display */
     private static Label statusCell(String text) {
         Label label = new Label(text);
         label.setMinWidth(62);
@@ -281,6 +271,7 @@ public class FloorPanel {
         return label;
     }
 
+    /** make the arrow button display */
     private Button createArrowButton(String imagePath) {
         Button button = new Button();
         button.setMinSize(58, 42);
@@ -289,33 +280,31 @@ public class FloorPanel {
         return button;
     }
 
+    /** handle a direction request */
     private void requestDirection(ElevatorPanelGUI.Direction direction) {
         updateDirection(direction);
-        if (directionRequestHandler != null) {
-            directionRequestHandler.accept(direction);
-        }
+        if (directionRequestHandler != null) directionRequestHandler.accept(direction);
     }
 
+    /** toggle the on or off style of the arrow */
     private void updateArrowStyles() {
         upButton.setStyle(up.get() ? ARROW_ON_STYLE : ARROW_OFF_STYLE);
         downButton.setStyle(down.get() ? ARROW_ON_STYLE : ARROW_OFF_STYLE);
-        setArrowGraphic(upButton,
-                up.get() ? ElevatorPanelGUI.UP_ARROW_ON_IMAGE_PATH
-                        : ElevatorPanelGUI.UP_ARROW_OFF_IMAGE_PATH);
-        setArrowGraphic(downButton,
-                down.get() ? ElevatorPanelGUI.DOWN_ARROW_ON_IMAGE_PATH
-                        : ElevatorPanelGUI.DOWN_ARROW_OFF_IMAGE_PATH);
+        setArrowGraphic(upButton, up.get() ? ElevatorPanelGUI.UP_ARROW_ON : ElevatorPanelGUI.UP_ARROW_OFF);
+        setArrowGraphic(downButton, down.get() ? ElevatorPanelGUI.DOWN_ARROW_ON : ElevatorPanelGUI.DOWN_ARROW_OFF);
     }
 
+    /** update the style of the arrow display to indicate status */
     private void updateAlarmStyle() {
         alarmButton.setStyle(alarmOn.get() ? ALARM_ON_STYLE : ALARM_OFF_STYLE);
         alarmButton.setText(alarmOn.get() ? "ALARM ON" : "ALARM");
     }
 
+    /** find the correct arrow for the current direction on the GUI */
     private void setStatusDirectionGraphic(Label label, ElevatorPanelGUI.Direction direction) {
         String imagePath = switch (direction) {
-            case UP -> ElevatorPanelGUI.UP_ARROW_ON_IMAGE_PATH;
-            case DOWN -> ElevatorPanelGUI.DOWN_ARROW_ON_IMAGE_PATH;
+            case UP -> ElevatorPanelGUI.UP_ARROW_ON;
+            case DOWN -> ElevatorPanelGUI.DOWN_ARROW_ON;
             case IDLE -> null;
         };
         label.setText("");
@@ -323,16 +312,12 @@ public class FloorPanel {
         label.setStyle("-fx-border-color: #aaaaaa; -fx-border-width: 0 0 1 0; -fx-padding: 3 2 3 2;");
     }
 
+    /** create an image on the GUI given the file path and size of the image */
     private ImageView createImage(String imagePath, double width, double height) {
-        if (imagePath == null || imagePath.isBlank()) {
-            return null;
-        }
+        if (imagePath == null || imagePath.isBlank()) return null;
 
         try (InputStream stream = getClass().getResourceAsStream(imagePath)) {
-            if (stream == null) {
-                return null;
-            }
-
+            if (stream == null) return null;
             ImageView imageView = new ImageView(new Image(stream));
             imageView.setFitWidth(width);
             imageView.setFitHeight(height);
@@ -343,20 +328,18 @@ public class FloorPanel {
         }
     }
 
+    /** set the image for the up and down on and off arrows */
     private void setArrowGraphic(Button button, String imagePath) {
         ImageView arrowImage = createImage(imagePath, 28, 28);
         button.setText("");
         button.setGraphic(arrowImage);
     }
 
-    public String getFloorNumber() {
-        return floorNumber;
-    }
+    /** getters for floor display info */
+    public String getFloorNumber() { return floorNumber; }
+    public VBox getComponents() { return components; }
 
-    public VBox getComponents() {
-        return components;
-    }
-
+    /** ensure that a floor number is valid */
     private static void checkFloor(int floor) {
         if (floor < ElevatorPanelGUI.MIN_FLOOR || floor > ElevatorPanelGUI.MAX_FLOOR) {
             throw new IllegalArgumentException(
@@ -366,6 +349,7 @@ public class FloorPanel {
         }
     }
 
+    /** ensure that an elevator number is valid */
     private static void checkElevatorNumber(int elevatorNumber) {
         if (elevatorNumber < 1 || elevatorNumber > ELEVATOR_COUNT) {
             throw new IllegalArgumentException(
