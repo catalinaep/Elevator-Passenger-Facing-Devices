@@ -20,11 +20,11 @@ public class FloorPanel {
 
     public FloorPanel(String floorNumber) {
         this.floorNumber = floorNumber;
+        createGUIComponents();
     }
 
     public FloorPanel() {
         this.floorNumber = "1";
-        createGUIComponents();
     }
 
 
@@ -33,7 +33,7 @@ public class FloorPanel {
      * @return True if pressed, false otherwise
      */
     public boolean upBtnPressed() {
-        return up.getValue();
+        return up.get();
     }
 
     /**
@@ -41,21 +41,21 @@ public class FloorPanel {
      * @return True if pressed, false otherwise
      */
     public boolean downBtnPressed() {
-        return down.getValue();
+        return down.get();
     }
 
     /**
      * Resets the up button boolean to default false value.
      */
     public void resetUpBtn() {
-        up.setValue(false);
+        up.set(false);
     }
 
     /**
      * Resets the down button boolean to default false value.
      */
     public void resetDownBtn() {
-        down.setValue(false);
+        down.set(false);
     }
 
     /**
@@ -63,14 +63,14 @@ public class FloorPanel {
      * @return True if pressed, false otherwise
      */
     public static boolean alarmPressed() {
-        return alarmOn.getValue();
+        return alarmOn.get();
     }
 
     /**
      * Resets to the default false state of the alarm button.
      */
     public void resetAlarm() {
-        alarmOn.setValue(false);
+        alarmOn.set(false);
     }
 
     /**
@@ -86,15 +86,15 @@ public class FloorPanel {
         Button upBtn= new Button("up");
         upBtn.setOnAction(event -> {
             if (!down.getValue()) {
-                up.setValue(true);
+                up.set(true);
             }
             System.out.println("up button pressed");
         });
 
         Button downBtn = new Button("down");
         downBtn.setOnAction(event -> {
-            if (!up.getValue()) {
-                down.setValue(true);
+            if (!up.get()) {
+                down.set(true);
             }
             System.out.println("down button pressed");
         });
