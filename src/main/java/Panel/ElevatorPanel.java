@@ -94,7 +94,7 @@ public class ElevatorPanel {
 
     /** update the direction display with either string or direction enum of direction */
     public void updateDirDisplay(String newDirection) { gui.updateDirDisplay(newDirection); }
-    public void updateDirDisplay(ElevatorPanelGUI.Direction newDirection) { gui.setDirection(newDirection); }
+    public void updateDirDisplay(Direction newDirection) { gui.setDirection(newDirection); }
 
     // get the number of the elevator for the panel
     public int getElevatorNum() { return elevatorNum; }
