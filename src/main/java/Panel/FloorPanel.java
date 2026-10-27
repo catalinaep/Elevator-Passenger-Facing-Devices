@@ -72,8 +72,6 @@ public class FloorPanel {
 
     private Consumer<ElevatorPanelGUI.Direction> directionRequestHandler;
     private BiConsumer<String, Boolean> alarmHandler;
-    private Button upButton;
-    private Button downButton;
     private Button alarmButton;
 
     public FloorPanel(String floorNumber) {
@@ -82,20 +80,6 @@ public class FloorPanel {
         }
         this.floorNumber = floorNumber.trim();
         createGUIComponents();
-    }
-
-    /** getters for button info */
-    public boolean upBtnPressed() { return up.get(); }
-    public boolean downBtnPressed() { return down.get(); }
-
-    /** reset the request buttons */
-    public void resetUpBtn() {
-        up.set(false);
-        updateArrowStyles();
-    }
-    public void resetDownBtn() {
-        down.set(false);
-        updateArrowStyles();
     }
 
     /** change and get alarm status for various needs*/
@@ -122,7 +106,6 @@ public class FloorPanel {
         Objects.requireNonNull(direction, "Direction cannot be null.");
         up.set(direction == ElevatorPanelGUI.Direction.UP);
         down.set(direction == ElevatorPanelGUI.Direction.DOWN);
-        updateArrowStyles();
     }
 
     // update the direction display
@@ -147,12 +130,6 @@ public class FloorPanel {
     public ElevatorPanelGUI.Direction getElevatorDirection(int elevatorNumber) {
         checkElevatorNumber(elevatorNumber);
         return elevatorDirections.get(elevatorNumber);
-    }
-
-    // get the display for an elevator number
-    public String getElevatorFloorDisplay(int elevatorNumber) {
-        checkElevatorNumber(elevatorNumber);
-        return elevatorFloorDisplays.get(elevatorNumber).getText();
     }
 
     // the handler takes care of changing directions
@@ -203,35 +180,6 @@ public class FloorPanel {
             grid.add(elevatorDirection, 2, row);
         }
 
-        Label callTitle = sectionLabel("CALL ELEVATOR");
-        GridPane.setColumnSpan(callTitle, 3);
-        grid.add(callTitle, 0, 7);
-
-        // set the style for the floor display label
-        Label floorDisplay = new Label(floorNumber);
-        floorDisplay.setAlignment(Pos.CENTER);
-        floorDisplay.setMinSize(130, 92);
-        floorDisplay.setMaxSize(130, 92);
-        floorDisplay.setStyle("""
-                -fx-background-color: #111111;
-                -fx-border-color: #b7b7b7;
-                -fx-border-width: 2;
-                -fx-text-fill: #f7f7f7;
-                -fx-font-size: 42px;
-                -fx-font-family: "Monospaced";
-                -fx-font-weight: bold;
-                """);
-        GridPane.setColumnSpan(floorDisplay, 2);
-        GridPane.setRowSpan(floorDisplay, 2);
-        grid.add(floorDisplay, 0, 8);
-
-        upButton = createArrowButton(ElevatorPanelGUI.UP_ARROW_OFF);
-        downButton = createArrowButton(ElevatorPanelGUI.DOWN_ARROW_OFF);
-        upButton.setOnAction(event -> requestDirection(ElevatorPanelGUI.Direction.UP));
-        downButton.setOnAction(event -> requestDirection(ElevatorPanelGUI.Direction.DOWN));
-        grid.add(upButton, 2, 8);
-        grid.add(downButton, 2, 9);
-
         alarmButton = new Button("ALARM");
         alarmButton.setMinWidth(205);
         alarmButton.setOnAction(event -> toggleAlarm());
@@ -242,7 +190,6 @@ public class FloorPanel {
         components.setAlignment(Pos.CENTER);
         components.setStyle("-fx-background-color: #dedede; -fx-border-color: #676767; -fx-border-width: 1;");
         components.getChildren().add(grid);
-        updateArrowStyles();
         updateAlarmStyle();
     }
 
@@ -284,14 +231,6 @@ public class FloorPanel {
     private void requestDirection(ElevatorPanelGUI.Direction direction) {
         updateDirection(direction);
         if (directionRequestHandler != null) directionRequestHandler.accept(direction);
-    }
-
-    /** toggle the on or off style of the arrow */
-    private void updateArrowStyles() {
-        upButton.setStyle(up.get() ? ARROW_ON_STYLE : ARROW_OFF_STYLE);
-        downButton.setStyle(down.get() ? ARROW_ON_STYLE : ARROW_OFF_STYLE);
-        setArrowGraphic(upButton, up.get() ? ElevatorPanelGUI.UP_ARROW_ON : ElevatorPanelGUI.UP_ARROW_OFF);
-        setArrowGraphic(downButton, down.get() ? ElevatorPanelGUI.DOWN_ARROW_ON : ElevatorPanelGUI.DOWN_ARROW_OFF);
     }
 
     /** update the style of the arrow display to indicate status */
