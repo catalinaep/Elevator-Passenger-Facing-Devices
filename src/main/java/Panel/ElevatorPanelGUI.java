@@ -141,11 +141,6 @@ public class ElevatorPanelGUI {
         GridPane.setColumnSpan(elevatorNumberLabel, 2);
         grid.add(elevatorNumberLabel, 0, 0);
 
-        // floor number label
-        Label displayTitle = sectionLabel("CURRENT FLOOR");
-        GridPane.setColumnSpan(displayTitle, 2);
-        grid.add(displayTitle, 0, 1);
-
         // actual floor number display
         floorLabel.setAlignment(Pos.CENTER);
         floorLabel.setMinSize(122, 92);
@@ -170,7 +165,8 @@ public class ElevatorPanelGUI {
         grid.add(downIndicator, 1, 4);
 
         // title for the buttons
-        Label buttonTitle = sectionLabel("SELECT FLOOR");
+        Label buttonTitle = new Label("SELECT FLOOR");
+        buttonTitle.setStyle("-fx-font-size: 11px; -fx-font-weight: bold;");
         GridPane.setColumnSpan(buttonTitle, 2);
         grid.add(buttonTitle, 0, 5);
 
@@ -224,13 +220,6 @@ public class ElevatorPanelGUI {
         buzzerActive = false;
         SoundEffects.stopBuzzer();
         setControlImage(buzzerImage, BUZZER_OFF);
-    }
-
-    // make a label for one section
-    private static Label sectionLabel(String text) {
-        Label label = new Label(text);
-        label.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #4b4bfb;");
-        return label;
     }
 
     /** configure one of the display only images, key or buzzer */
