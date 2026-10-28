@@ -1,5 +1,6 @@
 package Panel;
 
+import javafx.animation.PauseTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -8,19 +9,20 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
- * The JavaFX view for the elevator panel, configures all of the visual components
+ * The JavaFX view for the elevator panel, configures all the visual components
  */
 public class ElevatorPanelGUI {
     public static final int MIN_FLOOR = 1;
@@ -33,6 +35,10 @@ public class ElevatorPanelGUI {
     static final String DOWN_ARROW_ON = "/arrow-down-on.png";
     private static final String FLOOR_BUTTON_OFF = "/buttons-grey/%d.png";
     private static final String FLOOR_BUTTON_ON = "/buttons-green/%d-green.png";
+    private static final String KEY_OFF = "/key-off.png";
+    private static final String KEY_ON = "/key-on.png";
+    private static final String BUZZER_OFF = "/buzzer-off.png";
+    private static final String BUZZER_ON = "/buzzer-on.png";
 
     // styles for each type of arrow and button
     private static final String FLOOR_BUTTON_OFF_STYLE = """
@@ -95,8 +101,9 @@ public class ElevatorPanelGUI {
     private final Label directionLabel = new Label(Direction.IDLE.getDisplayText());
     private final Button upIndicator;
     private final Button downIndicator;
-    private final ToggleButton keyButton = new ToggleButton("KEY");
-    private final ToggleButton buzzerButton = new ToggleButton("BUZZER");
+    private final ImageView keyImage = new ImageView();
+    private final StackPane keyContainer = new StackPane(keyImage);
+    private final ImageView buzzerImage = new ImageView();
     private final Map<Integer, Button> floorButtons = new LinkedHashMap<>();
     private final Map<Integer, Boolean> floorButtonStatus = new LinkedHashMap<>();
     private final Map<String, Integer> floorsByButtonId = new LinkedHashMap<>();
@@ -107,14 +114,17 @@ public class ElevatorPanelGUI {
     private Consumer<Boolean> buzzerHandler;
     private Direction direction = Direction.IDLE;
     private int elevatorNumber;
+    private boolean keyInserted;
+    private final PauseTransition dingImageTimer = new PauseTransition(Duration.millis(500));
+    private boolean buzzerActive;
 
     public ElevatorPanelGUI() {
         upIndicator = createDirectionIndicator(UP_ARROW_OFF);
         downIndicator = createDirectionIndicator(DOWN_ARROW_OFF);
         buildView();
+        if (!buzzerActive) setControlImage(buzzerImage, BUZZER_OFF);
         setDirection(Direction.IDLE);
         setKeyInserted(false);
-        setBuzzerOn(false);
     }
 
     /**
@@ -164,7 +174,7 @@ public class ElevatorPanelGUI {
         GridPane.setColumnSpan(buttonTitle, 2);
         grid.add(buttonTitle, 0, 5);
 
-        // loop to place all of the floor change buttons
+        // loop to place all the floor change buttons
         for (int floor = MIN_FLOOR; floor <= MAX_FLOOR; floor++) {
             Button button = createFloorButton(floor);
             floorButtons.put(floor, button);
@@ -175,21 +185,18 @@ public class ElevatorPanelGUI {
             grid.add(button, index % 2, 6 + index / 2);
         }
 
-        // set key and buzzer buttons up
-        configureSmallControl(keyButton);
-        configureSmallControl(buzzerButton);
-        keyButton.setOnAction(event -> {
-            applyControlStyle(keyButton);
-            if (keyHandler != null) { keyHandler.accept(keyButton.isSelected()); }
-        });
-        buzzerButton.setOnAction(event -> {
-            applyControlStyle(buzzerButton);
-            if (buzzerHandler != null) {
-                buzzerHandler.accept(buzzerButton.isSelected());
-            }
-        });
-        grid.add(keyButton, 0, 11);
-        grid.add(buzzerButton, 1, 11);
+        // key and buzzer images
+        keyContainer.setPrefSize(58, 48);
+        keyContainer.setMinSize(58, 48);
+        keyContainer.setMaxSize(58, 48);
+        grid.add(keyContainer, 0, 11);
+        configureImageControl(keyImage, KEY_OFF);
+        configureImageControl(buzzerImage, BUZZER_OFF);
+        grid.add(buzzerImage, 1, 11);
+        GridPane.setHalignment(keyImage, javafx.geometry.HPos.CENTER);
+        GridPane.setHalignment(buzzerImage, javafx.geometry.HPos.CENTER);
+        GridPane.setValignment(keyImage, javafx.geometry.VPos.CENTER);
+        GridPane.setValignment(buzzerImage, javafx.geometry.VPos.CENTER);
 
         view.setPadding(new Insets(18));
         view.setAlignment(Pos.CENTER);
@@ -197,11 +204,42 @@ public class ElevatorPanelGUI {
         view.getChildren().add(grid);
     }
 
+    // play a short ding sound
+    public void ding() {
+        SoundEffects.playDing();
+        setControlImage(buzzerImage, BUZZER_ON);
+        dingImageTimer.playFromStart();
+    }
+
+    // start the buzzer playing
+    public void startBuzzer() {
+        dingImageTimer.stop();
+        buzzerActive = true;
+        SoundEffects.startBuzzer();
+        setControlImage(buzzerImage, BUZZER_ON);
+    }
+
+    // stop the buzzer playing
+    public void stopBuzzer() {
+        buzzerActive = false;
+        SoundEffects.stopBuzzer();
+        setControlImage(buzzerImage, BUZZER_OFF);
+    }
+
     // make a label for one section
     private static Label sectionLabel(String text) {
         Label label = new Label(text);
-        label.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #4b4b4b;");
+        label.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #4b4bfb;");
         return label;
+    }
+
+    /** configure one of the display only images, key or buzzer */
+    private void configureImageControl(ImageView imageView, String imagePath) {
+        ImageView image = createImage(imagePath, 58, 48);
+        imageView.setImage(image == null ? null : image.getImage());
+        imageView.setFitWidth(58);
+        imageView.setFitHeight(48);
+        imageView.setPreserveRatio(true);
     }
 
     // make one button for a floor with the floor number
@@ -228,13 +266,6 @@ public class ElevatorPanelGUI {
         button.setMouseTransparent(true);
         setArrowGraphic(button, imagePath);
         return button;
-    }
-
-    // make the style for a small button
-    private static void configureSmallControl(ToggleButton button) {
-        button.setMinSize(58, 30);
-        button.setMaxSize(58, 30);
-        button.setFocusTraversable(false);
     }
 
     // toggle whether a button is on or off
@@ -300,29 +331,37 @@ public class ElevatorPanelGUI {
         return floorButtonStatus.get(floor);
     }
 
-    // set key inserted as true/false
+    // set key inserted as true/false and change image
     public void setKeyInserted(boolean inserted) {
-        keyButton.setSelected(inserted);
-        applyControlStyle(keyButton);
+        keyInserted = inserted;
+        setControlImage(keyImage, inserted ? KEY_ON : KEY_OFF);
+
+        keyContainer.setStyle(inserted
+                ? """
+              -fx-border-color: #ff2020;
+              -fx-border-width: 2;
+              -fx-border-radius: 4;
+              -fx-effect: dropshadow(gaussian, #ff0000, 16, 0.85, 0, 0);
+              """
+                : "");
     }
 
     // check if key is inserted
     public boolean isKeyInserted() {
-        return keyButton.isSelected();
+        return keyInserted;
     }
-
-    /** set the buzzer on and check its status and the button id at a floor */
-    public void setBuzzerOn(boolean on) {
-        buzzerButton.setSelected(on);
-        applyControlStyle(buzzerButton);
-    }
-    public boolean isBuzzerOn() { return buzzerButton.isSelected();}
 
     /** get the button id at a floor with different parameters */
     public int getButtonIdAtFloor(String buttonId) { return floorsByButtonId.getOrDefault(buttonId, -1);}
     public String getButtonIdAtFloor(int floor) {
         checkFloor(floor);
         return BUTTON_IDS[floor];
+    }
+
+    /** change an image for a control */
+    private void setControlImage(ImageView imageView, String imagePath) {
+        ImageView image = createImage(imagePath, 58, 48);
+        imageView.setImage(image == null ? null : image.getImage());
     }
 
     /**

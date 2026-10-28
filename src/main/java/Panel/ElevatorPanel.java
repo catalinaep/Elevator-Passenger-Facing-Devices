@@ -61,7 +61,6 @@ public class ElevatorPanel {
     public void playBuzz() {
         if (buzzerOn) return;
         buzzerOn = true;
-        gui.setBuzzerOn(true);
         SoundEffects.startBuzzer();
     }
 
@@ -69,7 +68,6 @@ public class ElevatorPanel {
     public void stopBuzz() {
         if (!buzzerOn) return;
         buzzerOn = false;
-        gui.setBuzzerOn(false);
         SoundEffects.stopBuzzer();
     }
 

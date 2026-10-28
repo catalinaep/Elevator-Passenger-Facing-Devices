@@ -7,6 +7,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
+
 /**
  * Runs the one floor demonstration of the passenger facing devices
  */
@@ -24,16 +27,13 @@ public class Main extends Application {
         elevatorPanel.updateFloorDisplay(1);
         elevatorPanel.updateDirDisplay(Direction.IDLE);
 
-        Label title = new Label("ELEVATOR 1");
-        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
-        VBox root = new VBox(8, title, elevatorGUI.getView());
+        VBox root = new VBox(8, elevatorGUI.getView());
         root.setAlignment(Pos.TOP_CENTER);
         root.setPadding(new Insets(24));
         root.setStyle("-fx-background-color: #f8f8f8;");
 
         stage.setTitle("Elevator Panel");
-        stage.setScene(new Scene(root, 260, 560));
+        stage.setScene(new Scene(root, 260, 650));
         stage.show();
     }
 
@@ -58,7 +58,7 @@ public class Main extends Application {
 
         Stage floorStage = new Stage();
         floorStage.setTitle("Floor Panel");
-        floorStage.setScene(new Scene(root, 300, 560));
+        floorStage.setScene(new Scene(root, 300, 420));
         floorStage.show();
     }
 

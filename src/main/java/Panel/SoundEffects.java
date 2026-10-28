@@ -12,6 +12,7 @@ import java.net.URL;
  */
 final class SoundEffects {
     private static final String DING_PATH = "/ding.mp3";
+    private static final String BUZZER_PATH = "/buzzer.wav";
     private static MediaPlayer buzzerPlayer;
 
     private SoundEffects() {}
@@ -19,7 +20,7 @@ final class SoundEffects {
     // the method to make the ding sound play on javafx
     static void playDing() {
         runOnFxThread(() -> {
-            MediaPlayer player = createPlayer();
+            MediaPlayer player = createPlayer(DING_PATH);
             if (player == null) return;
 
             player.setOnEndOfMedia(() -> dispose(player));
@@ -32,7 +33,7 @@ final class SoundEffects {
     static void startBuzzer() {
         runOnFxThread(() -> {
             clearBuzzer();
-            MediaPlayer player = createPlayer();
+            MediaPlayer player = createPlayer(BUZZER_PATH);
             if (player == null) return;
 
             buzzerPlayer = player;
@@ -49,8 +50,8 @@ final class SoundEffects {
     static void stopBuzzer() { runOnFxThread(SoundEffects::clearBuzzer); }
 
     // creates the media player object that plays the sound on javafx
-    private static MediaPlayer createPlayer() {
-        URL resource = SoundEffects.class.getResource(DING_PATH);
+    private static MediaPlayer createPlayer(String soundPath) {
+        URL resource = SoundEffects.class.getResource(soundPath);
         if (resource == null) return null;
 
         try {
