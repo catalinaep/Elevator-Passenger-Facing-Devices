@@ -1,14 +1,12 @@
-import Panel.*;
+import Panel.Direction;
+import Panel.ElevatorPanel.ElevatorPanel;
+import Panel.FloorPanel.FloorPanel;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import javafx.animation.PauseTransition;
-import javafx.util.Duration;
 
 /**
  * Runs the one floor demonstration of the passenger facing devices
@@ -22,12 +20,12 @@ public class Main extends Application {
 
     /** Create a window that only contains the elevator window */
     private void showElevatorWindow(Stage stage) {
-        ElevatorPanelGUI elevatorGUI = new ElevatorPanelGUI();
-        ElevatorPanel elevatorPanel = new ElevatorPanel(1, elevatorGUI);
+        ElevatorPanel elevatorPanel = new ElevatorPanel(1);
+
         elevatorPanel.updateFloorDisplay(1);
         elevatorPanel.updateDirDisplay(Direction.IDLE);
 
-        VBox root = new VBox(8, elevatorGUI.getView());
+        VBox root = new VBox(8, elevatorPanel.getGui());
         root.setAlignment(Pos.TOP_CENTER);
         root.setPadding(new Insets(24));
         root.setStyle("-fx-background-color: #f8f8f8;");
@@ -40,13 +38,8 @@ public class Main extends Application {
     /** Creates a separate window that only contains the floor panel */
     private void showFloorPanelWindow() {
         FloorPanel floorPanel = new FloorPanel("1");
-        FloorPanelGUI floorPanelGUI = new FloorPanelGUI();
 
-        floorPanelGUI.setDirectionRequestHandler(floorPanel::requestDirection);
-        floorPanelGUI.setAlarmRequestHandler(floorPanel::toggleAlarm);
-        floorPanel.setStateListener(floorPanelGUI::render);
-
-        VBox root = new VBox(8, floorPanelGUI.getView());
+        VBox root = new VBox(8, floorPanel.getGui());
         root.setAlignment(Pos.TOP_CENTER);
         root.setPadding(new Insets(24));
         root.setStyle("-fx-background-color: #f8f8f8;");

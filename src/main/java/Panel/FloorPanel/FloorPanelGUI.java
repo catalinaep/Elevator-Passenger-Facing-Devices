@@ -1,5 +1,6 @@
-package Panel;
+package Panel.FloorPanel;
 
+import Panel.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -7,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
@@ -18,8 +18,9 @@ import java.util.function.Consumer;
 
 /**
  * Makes the GUI components of a floor panel
+ * The only class that accesses this GUI is floor panel
  */
-public class FloorPanelGUI {
+class FloorPanelGUI {
     // styles for arrows
     private static final String UP_ARROW_OFF = "/arrow-up-off.png";
     private static final String UP_ARROW_ON = "/arrow-up-on.png";
@@ -70,20 +71,20 @@ public class FloorPanelGUI {
     private final Button upButton = createArrowButton("▲", UP_ARROW_OFF);
     private final Button downButton = createArrowButton("▼", DOWN_ARROW_OFF);
     private final Button alarmButton = new Button("ALARM");
-    private Consumer<Direction> directionRequestHandler;
-    private Runnable alarmRequestHandler;
+    private final Consumer<Direction> directionRequestHandler;
+    private final Runnable alarmRequestHandler;
 
-    public FloorPanelGUI() { buildView(); }
-
-    /** set handlers */
-    public void setDirectionRequestHandler(Consumer<Direction> handler) { directionRequestHandler = handler; }
-    public void setAlarmRequestHandler(Runnable handler) { alarmRequestHandler = handler; }
+    public FloorPanelGUI(Consumer<Direction> directionConsumer, Runnable alarmHandler) {
+        this.directionRequestHandler = directionConsumer;
+        this.alarmRequestHandler = alarmHandler;
+        buildView();
+    }
 
     /** Get the full GUI for the floor panel */
-    public VBox getView() { return view; }
+    VBox getView() { return view; }
 
     /** render the display of the panel */
-    public void render(FloorPanel.floorState floorState) {
+    void render(FloorPanel.floorState floorState) {
         title.setText("FLOOR " + floorState.floorNumber());
         setCallButtonAppearance(floorState.requestedDirection());
         setAlarmGraphic(floorState.alarmOn());
@@ -145,11 +146,7 @@ public class FloorPanelGUI {
         alarmButton.setFocusTraversable(false);
         alarmButton.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
         setAlarmGraphic(false);
-        alarmButton.setOnAction(event -> {
-            if (alarmRequestHandler != null) {
-                alarmRequestHandler.run();
-            }
-        });
+        alarmButton.setOnAction(event -> alarmRequestHandler.run());
         grid.add(alarmButton, 2, 8);
 
         view.setPadding(new Insets(18));

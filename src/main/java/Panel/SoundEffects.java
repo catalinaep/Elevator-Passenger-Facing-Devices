@@ -10,7 +10,7 @@ import java.net.URL;
  * Implements the sound effects needed for the buzzer and ding function
  * @author Amber Smith
  */
-final class SoundEffects {
+public final class SoundEffects {
     private static final String DING_PATH = "/ding.mp3";
     private static final String BUZZER_PATH = "/buzzer.wav";
     private static MediaPlayer buzzerPlayer;
@@ -18,7 +18,7 @@ final class SoundEffects {
     private SoundEffects() {}
 
     // the method to make the ding sound play on javafx
-    static void playDing() {
+    public static void playDing() {
         runOnFxThread(() -> {
             MediaPlayer player = createPlayer(DING_PATH);
             if (player == null) return;
@@ -30,7 +30,7 @@ final class SoundEffects {
     }
 
     // play the buzzer sound effect on javafx
-    static void startBuzzer() {
+    public static void startBuzzer() {
         runOnFxThread(() -> {
             clearBuzzer();
             MediaPlayer player = createPlayer(BUZZER_PATH);
@@ -47,7 +47,7 @@ final class SoundEffects {
     }
 
     // stop the buzzer sound
-    static void stopBuzzer() { runOnFxThread(SoundEffects::clearBuzzer); }
+    public static void stopBuzzer() { runOnFxThread(SoundEffects::clearBuzzer); }
 
     // creates the media player object that plays the sound on javafx
     private static MediaPlayer createPlayer(String soundPath) {

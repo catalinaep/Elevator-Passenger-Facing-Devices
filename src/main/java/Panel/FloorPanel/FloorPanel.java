@@ -1,5 +1,10 @@
-package Panel;
+package Panel.FloorPanel;
 
+import Panel.Direction;
+import Panel.SoundEffects;
+import javafx.scene.Node;
+
+import javax.swing.*;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,6 +16,19 @@ import java.util.function.Consumer;
  * The panel for one floor that shows the status of the 4 elevators
  */
 public class FloorPanel {
+    public static final int ELEVATOR_COUNT = 4;
+    public static final int MIN_FLOOR = 1;
+    public static final int MAX_FLOOR = 10;
+
+    private final String floorNumber;
+    private final Map<Integer, ElevatorStatus> elevatorStatuses = new LinkedHashMap<>();
+    private final FloorPanelGUI gui;
+
+    private boolean alarmOn;
+    private Direction requestedDirection = Direction.IDLE;
+    private Consumer<Direction> directionRequestHandler;
+    private BiConsumer<String, Boolean> alarmHandler;
+    private Consumer<floorState> stateListener;
 
     /**
      * Holds the current state of a floor panel.
@@ -38,26 +56,18 @@ public class FloorPanel {
         }
     }
 
-    public static final int ELEVATOR_COUNT = 4;
-    public static final int MIN_FLOOR = 1;
-    public static final int MAX_FLOOR = 10;
-
-    private final String floorNumber;
-    private final Map<Integer, ElevatorStatus> elevatorStatuses = new LinkedHashMap<>();
-    private boolean alarmOn;
-    private Direction requestedDirection = Direction.IDLE;
-    private Consumer<Direction> directionRequestHandler;
-    private BiConsumer<String, Boolean> alarmHandler;
-    private Consumer<floorState> stateListener;
-
     public FloorPanel(String floorNumber) {
         if (floorNumber == null || floorNumber.isBlank()) {
             throw new IllegalArgumentException("Floor number cannot be blank.");
         }
+
         this.floorNumber = floorNumber.trim();
         for (int elevator = 1; elevator <= ELEVATOR_COUNT; elevator++) {
             elevatorStatuses.put(elevator, null);
         }
+
+        gui = new FloorPanelGUI(this::requestDirection, this::toggleAlarm);
+        gui.render(getFloorState());
     }
 
     /** getters for information stored by the panel */
@@ -70,6 +80,7 @@ public class FloorPanel {
         ElevatorStatus status = elevatorStatuses.get(elevatorNumber);
         return status == null ? Direction.IDLE : status.direction();
     }
+    public Node getGui() { return gui.getView(); }
 
     /** change the alarm status by setting it off, toggling it, or setting it on */
     public void resetAlarm() { setAlarmOn(false); }
@@ -112,15 +123,17 @@ public class FloorPanel {
     }
     public void setAlarmHandler(BiConsumer<String, Boolean> handler) { alarmHandler = handler; }
 
-    private void notifyStateListener() { if (stateListener != null) stateListener.accept(getFloorState()); }
+    private void notifyStateListener() {
+        floorState state = getFloorState();
+        gui.render(state);
+
+        if (stateListener != null) stateListener.accept(state);
+    }
 
     /** ensure that a floor number is valid */
     private static void checkFloor(int floor) {
-        if (floor < ElevatorPanelGUI.MIN_FLOOR || floor > ElevatorPanelGUI.MAX_FLOOR) {
-            throw new IllegalArgumentException(
-                    "Floor number must be between " + ElevatorPanelGUI.MIN_FLOOR
-                            + " and " + ElevatorPanelGUI.MAX_FLOOR + "."
-            );
+        if (floor < MIN_FLOOR || floor > MAX_FLOOR) {
+            throw new IllegalArgumentException("Floor number must be between " + MIN_FLOOR + " and " + MAX_FLOOR + ".");
         }
     }
 
