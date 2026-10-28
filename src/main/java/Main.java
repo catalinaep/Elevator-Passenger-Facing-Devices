@@ -53,7 +53,7 @@ public class Main extends Application {
 
         Stage floorStage = new Stage();
         floorStage.setTitle("Floor Panel");
-        floorStage.setScene(new Scene(root, 300, 400));
+        floorStage.setScene(new Scene(root, 350, 425));
         floorStage.show();
     }
 

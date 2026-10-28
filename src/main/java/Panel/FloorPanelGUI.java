@@ -25,6 +25,8 @@ public class FloorPanelGUI {
     private static final String UP_ARROW_ON = "/arrow-up-on.png";
     private static final String DOWN_ARROW_OFF = "/arrow-down-off.png";
     private static final String DOWN_ARROW_ON = "/arrow-down-on.png";
+    private static final String ALARM_OFF_IMAGE = "/alarm-off.png";
+    private static final String ALARM_ON_IMAGE = "/alarm-on.png";
     private static final String ARROW_OFF_STYLE = """
             -fx-background-color: #f4f4f4;
             -fx-border-color: #232323;
@@ -63,7 +65,8 @@ public class FloorPanelGUI {
     private final VBox view = new VBox();
     private final Label title = new Label();
     private final Map<Integer, Label> elevatorFloorDisplays = new LinkedHashMap<>();
-    private final Map<Integer, Label> elevatorDirectionDisplays = new LinkedHashMap<>();
+    private final Map<Integer, Label> elevatorUpDisplays = new LinkedHashMap<>();
+    private final Map<Integer, Label> elevatorDownDisplays = new LinkedHashMap<>();
     private final Button upButton = createArrowButton("▲", UP_ARROW_OFF);
     private final Button downButton = createArrowButton("▼", DOWN_ARROW_OFF);
     private final Button alarmButton = new Button("ALARM");
@@ -80,17 +83,17 @@ public class FloorPanelGUI {
     public VBox getView() { return view; }
 
     /** render the display of the panel */
-    public void render(FloorPanel.floorState snapshot) {
-        title.setText("FLOOR " + snapshot.floorNumber());
-        setCallButtonAppearance(snapshot.requestedDirection());
-        alarmButton.setStyle(snapshot.alarmOn() ? ALARM_ON_STYLE : ALARM_OFF_STYLE);
-        alarmButton.setText(snapshot.alarmOn() ? "ALARM ON" : "ALARM");
+    public void render(FloorPanel.floorState floorState) {
+        title.setText("FLOOR " + floorState.floorNumber());
+        setCallButtonAppearance(floorState.requestedDirection());
+        setAlarmGraphic(floorState.alarmOn());
 
         for (int elevator = 1; elevator <= FloorPanel.ELEVATOR_COUNT; elevator++) {
-            FloorPanel.ElevatorStatus status = snapshot.elevatorStatuses().get(elevator);
+            FloorPanel.ElevatorStatus status = floorState.elevatorStatuses().get(elevator);
             elevatorFloorDisplays.get(elevator).setText(status == null ? "—" : String.valueOf(status.currentFloor()));
-            setStatusDirectionGraphic(elevatorDirectionDisplays.get(elevator),
-                    status == null ? Direction.IDLE : status.direction());
+            Direction direction = status == null ? Direction.IDLE : status.direction();
+            setStatusArrowGraphic(elevatorUpDisplays.get(elevator), direction == Direction.UP, UP_ARROW_OFF, UP_ARROW_ON);
+            setStatusArrowGraphic(elevatorDownDisplays.get(elevator), direction == Direction.DOWN, DOWN_ARROW_OFF, DOWN_ARROW_ON);
         }
     }
 
@@ -102,43 +105,52 @@ public class FloorPanelGUI {
         grid.setAlignment(Pos.CENTER);
 
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-        GridPane.setColumnSpan(title, 3);
+        GridPane.setColumnSpan(title, 4);
         grid.add(title, 0, 0);
 
         Label statusTitle = sectionLabel("ELEVATOR STATUS");
-        GridPane.setColumnSpan(statusTitle, 3);
+        GridPane.setColumnSpan(statusTitle, 4);
         grid.add(statusTitle, 0, 1);
+
         grid.add(statusHeader("#"), 0, 2);
-        grid.add(statusHeader("FLOOR"), 1, 2);
-        grid.add(statusHeader("DIRECTION"), 2, 2);
+        grid.add(statusHeader("UP"), 1, 2);
+        grid.add(statusHeader("FLOOR"), 2, 2);
+        grid.add(statusHeader("DOWN"), 3, 2);
 
         for (int elevator = 1; elevator <= FloorPanel.ELEVATOR_COUNT; elevator++) {
             int row = elevator + 2;
-            Label elevatorFloor = statusCell("—");
-            Label elevatorDirection = statusCell("");
-            elevatorFloorDisplays.put(elevator, elevatorFloor);
-            elevatorDirectionDisplays.put(elevator, elevatorDirection);
+
+            Label upArrow = statusArrowCell();
+            Label floorDisplay = statusCell("—");
+            Label downArrow = statusArrowCell();
+
+            elevatorUpDisplays.put(elevator, upArrow);
+            elevatorFloorDisplays.put(elevator, floorDisplay);
+            elevatorDownDisplays.put(elevator, downArrow);
+
             grid.add(statusCell(String.valueOf(elevator)), 0, row);
-            grid.add(elevatorFloor, 1, row);
-            grid.add(elevatorDirection, 2, row);
+            grid.add(upArrow, 1, row);
+            grid.add(floorDisplay, 2, row);
+            grid.add(downArrow, 3, row);
         }
 
         Label callTitle = sectionLabel("CALL ELEVATOR");
-        GridPane.setColumnSpan(callTitle, 3);
+        GridPane.setColumnSpan(callTitle, 4);
         grid.add(callTitle, 0, 7);
-        HBox callButtons = new HBox(8, upButton, downButton);
-        callButtons.setAlignment(Pos.CENTER);
-        GridPane.setColumnSpan(callButtons, 3);
-        grid.add(callButtons, 0, 8);
+        grid.add(upButton, 1, 8);
+        grid.add(downButton, 3, 8);
 
-        alarmButton.setMinWidth(205);
+        alarmButton.setMinSize(58, 42);
+        alarmButton.setMaxSize(58, 42);
+        alarmButton.setFocusTraversable(false);
+        alarmButton.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
+        setAlarmGraphic(false);
         alarmButton.setOnAction(event -> {
             if (alarmRequestHandler != null) {
                 alarmRequestHandler.run();
             }
         });
-        GridPane.setColumnSpan(alarmButton, 3);
-        grid.add(alarmButton, 0, 9);
+        grid.add(alarmButton, 2, 8);
 
         view.setPadding(new Insets(18));
         view.setAlignment(Pos.CENTER);
@@ -185,25 +197,42 @@ public class FloorPanelGUI {
     }
     private static Label statusCell(String text) {
         Label label = new Label(text);
-        label.setMinWidth(62);
+        label.setMinSize(58, 42);
+        label.setMaxSize(58, 42);
         label.setAlignment(Pos.CENTER);
-        label.setStyle("-fx-border-color: #aaaaaa; -fx-border-width: 0 0 1 0; -fx-padding: 3 2 3 2;");
+        label.setStyle("""
+            -fx-border-color: #222222;
+            -fx-border-width: 0 0 1 0;
+            -fx-font-size: 17px;
+            -fx-padding: 2;
+            """);
         return label;
     }
-    private void setStatusDirectionGraphic(Label label, Direction direction) {
-        String imagePath = switch (direction) {
-            case UP -> UP_ARROW_ON;
-            case DOWN -> DOWN_ARROW_ON;
-            case IDLE -> null;
-        };
+    private static Label statusArrowCell() {
+        Label label = new Label();
+        label.setMinSize(58, 42);
+        label.setMaxSize(58, 42);
+        label.setAlignment(Pos.CENTER);
+        label.setStyle("""
+            -fx-border-color: #222222;
+            -fx-border-width: 0 0 1 0;
+            -fx-padding: 2;
+            """);
+        return label;
+    }
+    private void setStatusArrowGraphic(Label label, boolean active, String offImage, String onImage) {
         label.setText("");
-        label.setGraphic(createImage(imagePath, 22, 22));
-        label.setStyle("-fx-border-color: #aaaaaa; -fx-border-width: 0 0 1 0; -fx-padding: 3 2 3 2;");
+        label.setGraphic(createImage(active ? onImage : offImage, 28, 28));
     }
     private void createArrow(Button button, String fallbackArrow, String imagePath) {
         ImageView image = createImage(imagePath, 28, 28);
         button.setText(image == null ? fallbackArrow : "");
         button.setGraphic(image);
+    }
+    private void setAlarmGraphic(boolean alarmOn) {
+        ImageView image = createImage(alarmOn ? ALARM_ON_IMAGE : ALARM_OFF_IMAGE, 50, 50);
+        alarmButton.setText(image == null ? (alarmOn ? "ALARM ON" : "ALARM") : "");
+        alarmButton.setGraphic(image);
     }
 
     /** create an image from an image path and specified size */
