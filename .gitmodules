@@ -1,0 +1,3 @@
+[submodule "Software_Bus"]
+	path = Software_Bus
+	url = git@github.com:Wallyhoo/CS460_T03_ElevatorProject.git
