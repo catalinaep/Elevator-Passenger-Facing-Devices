@@ -2,10 +2,9 @@ import Panel.ElevatorPanel.ElevatorPanel;
 import Panel.FloorPanel.FloorPanel;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import testing.Manager;
@@ -39,32 +38,24 @@ public class Main extends Application {
 
         manager = new Manager(ip, port);
 
-        // make the elevator panels
-        VBox elevatorPanels = new VBox(15);
-        elevatorPanels.getChildren().add(new Label("Elevator Panels"));
-        for (int elevatorNumber = 1; elevatorNumber <= FloorPanel.ELEVATOR_COUNT; elevatorNumber++) {
-            ElevatorPanel elevatorPanel = new ElevatorPanel(elevatorNumber);
-            manager.addElevatorPanel(elevatorPanel);
+        ElevatorPanel elevatorPanel = new ElevatorPanel(1);
+        manager.addElevatorPanel(elevatorPanel);
+        VBox elevatorRoot = new VBox(10, new Label("Elevator 1"), elevatorPanel.getGui());
+        elevatorRoot.setPadding(new Insets(15));
 
-            VBox elevatorBox = new VBox(5, new Label("Elevator " + elevatorNumber), elevatorPanel.getGui());
-            elevatorPanels.getChildren().add(elevatorBox);
-        }
-
-        // make the floor panels
-        VBox floorPanels = new VBox(15);
-        floorPanels.getChildren().add(new Label("Floor Panels"));
-        for (int floorNumber = FloorPanel.MIN_FLOOR; floorNumber <= FloorPanel.MAX_FLOOR; floorNumber++) {
-            FloorPanel floorPanel = new FloorPanel(floorNumber);
-            manager.addFloorPanel(floorPanel);
-
-            VBox floorBox = new VBox(5, new Label("Floor " + floorNumber), floorPanel.getGui());
-            floorPanels.getChildren().add(floorBox);
-        }
-
-        HBox root = new HBox(25, new ScrollPane(elevatorPanels), new ScrollPane(floorPanels));
-        stage.setScene(new Scene(root, 1200, 800));
-        stage.setTitle("Elevator Passenger Panels");
+        stage.setTitle("Elevator 1 Panel");
+        stage.setScene(new Scene(elevatorRoot));
         stage.show();
+
+        FloorPanel floorPanel = new FloorPanel(1);
+        manager.addFloorPanel(floorPanel);
+        VBox floorRoot = new VBox(10, new Label("Floor 1 Panel"), floorPanel.getGui());
+        floorRoot.setPadding(new Insets(15));
+
+        Stage floorStage = new Stage();
+        floorStage.setTitle("Floor 1 Panel");
+        floorStage.setScene(new Scene(floorRoot));
+        floorStage.show();
 
         scriptThread = new Thread(() -> {
             try {
