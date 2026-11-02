@@ -21,12 +21,6 @@ trap cleanup EXIT INT TERM
 # give the server time to start listening
 sleep 1
 
-# start the test harness
-mvn exec:java \
-  -Dexec.mainClass=TestHarness.THMain \
-  "-Dexec.args=127.0.0.1 $PORT" &
-TH_PID=$!
-
 # start the actual javafx gui for the panels
 mvn javafx:run \
   "-Djavafx.args=127.0.0.1 $PORT $TEST_SCRIPT"
