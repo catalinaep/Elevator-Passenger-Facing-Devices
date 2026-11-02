@@ -23,7 +23,7 @@ mvn exec:java -Dexec.mainClass=SoftwareBus.SBMain "-Dexec.args=6000"
 In a second terminal:
 
 ```bash
-mvn javafx:run "-Djavafx.args=127.0.0.1 6000 elevator-demo.txt"
+mvn javafx:run "-Djavafx.args=127.0.0.1 6000 test-script.txt"
 ```
 
 ## Test-script format
