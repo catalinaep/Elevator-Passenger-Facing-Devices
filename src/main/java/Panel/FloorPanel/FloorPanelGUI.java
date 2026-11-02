@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  * Makes the GUI components of a floor panel
  * The only class that accesses this GUI is floor panel
  */
-class FloorPanelGUI {
+final class FloorPanelGUI {
     // styles for arrows
     private static final String UP_ARROW_OFF = "/arrow-up-off.png";
     private static final String UP_ARROW_ON = "/arrow-up-on.png";

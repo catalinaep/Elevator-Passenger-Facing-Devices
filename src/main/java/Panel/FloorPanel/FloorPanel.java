@@ -20,14 +20,14 @@ public class FloorPanel {
     public static final int MIN_FLOOR = 1;
     public static final int MAX_FLOOR = 10;
 
-    private final String floorNumber;
+    private final int floorNumber;
     private final Map<Integer, ElevatorStatus> elevatorStatuses = new LinkedHashMap<>();
     private final FloorPanelGUI gui;
 
     private boolean alarmOn;
     private Direction requestedDirection = Direction.IDLE;
     private Consumer<Direction> directionRequestHandler;
-    private BiConsumer<String, Boolean> alarmHandler;
+    private BiConsumer<Integer, Boolean> alarmHandler;
     private Consumer<floorState> stateListener;
 
     /**
@@ -37,7 +37,7 @@ public class FloorPanel {
      * @param requestedDirection what direction is requested for an elevator at that floor
      * @param elevatorStatuses the state of all 4 elevators
      */
-    public record floorState(String floorNumber, boolean alarmOn, Direction requestedDirection,
+    public record floorState(int floorNumber, boolean alarmOn, Direction requestedDirection,
                              Map<Integer, FloorPanel.ElevatorStatus> elevatorStatuses) {
         public floorState {
             elevatorStatuses = Collections.unmodifiableMap(new LinkedHashMap<>(elevatorStatuses));
@@ -56,12 +56,8 @@ public class FloorPanel {
         }
     }
 
-    public FloorPanel(String floorNumber) {
-        if (floorNumber == null || floorNumber.isBlank()) {
-            throw new IllegalArgumentException("Floor number cannot be blank.");
-        }
-
-        this.floorNumber = floorNumber.trim();
+    public FloorPanel(int floorNumber) {
+        this.floorNumber = floorNumber;
         for (int elevator = 1; elevator <= ELEVATOR_COUNT; elevator++) {
             elevatorStatuses.put(elevator, null);
         }
@@ -72,7 +68,7 @@ public class FloorPanel {
 
     /** getters for information stored by the panel */
     public floorState getFloorState() { return new floorState(floorNumber, alarmOn, requestedDirection, elevatorStatuses); }
-    public String getFloorNumber() { return floorNumber; }
+    public int getFloorNumber() { return floorNumber; }
     public boolean alarmPressed() { return alarmOn; }
     public Direction getRequestedDirection() { return requestedDirection; }
     public Direction getElevatorDirection(int elevatorNumber) {
@@ -121,7 +117,7 @@ public class FloorPanel {
         stateListener = listener;
         notifyStateListener();
     }
-    public void setAlarmHandler(BiConsumer<String, Boolean> handler) { alarmHandler = handler; }
+    public void setAlarmHandler(BiConsumer<Integer, Boolean> handler) { alarmHandler = handler; }
 
     private void notifyStateListener() {
         floorState state = getFloorState();

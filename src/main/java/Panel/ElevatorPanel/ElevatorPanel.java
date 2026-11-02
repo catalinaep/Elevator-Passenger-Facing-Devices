@@ -5,6 +5,8 @@ import Panel.SoundEffects;
 import javafx.scene.Node;
 
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
  * The panel for one elevator car. Holds the state and the behavior of the panel.
@@ -17,11 +19,13 @@ public class ElevatorPanel {
     private final boolean[] floorButtonPressed = new boolean[MAX_FLOOR];
     private boolean keyInserted;
     private boolean buzzerOn;
+    private IntConsumer floorButtonRequestHandler;
+    private Consumer<Boolean> keyStateHandler;
 
     public ElevatorPanel(int elevatorNum) {
         if (elevatorNum < 1) throw new IllegalArgumentException("Elevator number must be positive.");
         this.elevatorNum = elevatorNum;
-        gui = new ElevatorPanelGUI(elevatorNum, this::pressFloorButton, this::setKeyInserted, this::setBuzzerOn);
+        gui = new ElevatorPanelGUI(elevatorNum, this::pressFloorButton, this::setKeyInsertedGui, this::setBuzzerOn);
     }
 
     // get the gui for the elevator panel
@@ -34,6 +38,7 @@ public class ElevatorPanel {
         checkFloor(floorNum);
         floorButtonPressed[floorNum - 1] = true;
         gui.setFloorButtonStatus(floorNum, true);
+        if (floorButtonRequestHandler != null) floorButtonRequestHandler.accept(floorNum);
     }
 
     // register a button as pressed
@@ -53,6 +58,12 @@ public class ElevatorPanel {
     public void setKeyInserted(boolean inserted) {
         keyInserted = inserted;
         gui.setKeyInserted(inserted);
+    }
+
+    // set a key as inserted on the gui display
+    private void setKeyInsertedGui(boolean inserted) {
+        setKeyInserted(inserted);
+        if (keyStateHandler != null) keyStateHandler.accept(inserted);
     }
 
     // play the ding sound for door opening
@@ -97,10 +108,14 @@ public class ElevatorPanel {
         gui.updateFloorDisplay(newFloor);
     }
 
-    // udpate the direction on the gui
+    // update the direction on the gui
     public void updateDirDisplay(Direction newDirection) {
         gui.setDirection(Objects.requireNonNull(newDirection, "Direction cannot be null."));
     }
+
+    // set handlers for publishing in the software bus
+    public void setFloorButtonRequestHandler(IntConsumer handler) { floorButtonRequestHandler = handler; }
+    public void setKeyStateHandler(Consumer<Boolean> handler) { keyStateHandler = handler; }
 
     // get the number of the elevator
     public int getElevatorNum() {return elevatorNum; }

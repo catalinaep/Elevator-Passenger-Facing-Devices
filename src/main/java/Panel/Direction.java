@@ -31,4 +31,24 @@ public enum Direction {
             default -> throw new IllegalArgumentException("Direction must be UP, DOWN, or IDLE: " + value);
         };
     }
+
+    // get a direction from the numeric value used in the software bus
+    public static Direction fromValue(long value) {
+        return switch ((int) value) {
+            case 0 -> IDLE;
+            case 1 -> UP;
+            case 2 -> DOWN;
+            default -> throw new IllegalArgumentException(
+                    "Direction values must be 0 (IDLE), 1 (UP), or 2 (DOWN): " + value);
+        };
+    }
+
+    // get the software bus value of a direction
+    public int toValue() {
+        return switch (this) {
+            case IDLE -> 0;
+            case UP -> 1;
+            case DOWN -> 2;
+        };
+    }
 }
