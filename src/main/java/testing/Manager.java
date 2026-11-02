@@ -5,6 +5,7 @@ import Panel.ElevatorPanel.ElevatorPanel;
 import Panel.FloorPanel.FloorPanel;
 import Utilities.Message;
 import Utilities.Protocol;
+import javafx.application.Platform;
 
 import java.io.*;
 import java.net.Socket;
@@ -95,7 +96,7 @@ public class Manager implements AutoCloseable {
         Protocol.writeMessage(out, Message.of(Protocol.GET, topic, subtopic));
         Message message = Protocol.readMessage(in);
         if (message == null) throw new IOException("Disconnected from Bus");
-        if (message.topic() != Protocol.NO_MESSAGE) distribute(message);
+        if (message.topic() != Protocol.NO_MESSAGE) Platform.runLater(() -> distribute(message));
     }
 
     /**
