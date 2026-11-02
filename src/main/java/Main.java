@@ -1,56 +1,27 @@
-import Panel.Direction;
-import Panel.ElevatorPanel.ElevatorPanel;
-import Panel.FloorPanel.FloorPanel;
-import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import testing.Manager;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Runs the one floor demonstration of the passenger facing devices
  */
-public class Main extends Application {
-    @Override
-    public void start(Stage elevatorStage) {
-        showElevatorWindow(elevatorStage);
-        showFloorPanelWindow();
-    }
+public class Main {
 
-    /** Create a window that only contains the elevator window */
-    private void showElevatorWindow(Stage stage) {
-        ElevatorPanel elevatorPanel = new ElevatorPanel(1);
+    public static void main(String[] args) throws Exception {
+        if (args.length != 3) {
+            System.out.println("Usage: java Main <ip> <port> <test-file>");
+            return;
+        }
 
-        elevatorPanel.updateFloorDisplay(1);
-        elevatorPanel.updateDirDisplay(Direction.IDLE);
+        String ip = args[0];
+        int port = Integer.parseInt(args[1]);
+        Path testScript = Path.of(args[2]);
 
-        VBox root = new VBox(8, elevatorPanel.getGui());
-        root.setAlignment(Pos.TOP_CENTER);
-        root.setPadding(new Insets(24));
-        root.setStyle("-fx-background-color: #f8f8f8;");
-
-        stage.setTitle("Elevator Panel");
-        stage.setScene(new Scene(root, 260, 640));
-        stage.show();
-    }
-
-    /** Creates a separate window that only contains the floor panel */
-    private void showFloorPanelWindow() {
-        FloorPanel floorPanel = new FloorPanel("1");
-
-        VBox root = new VBox(8, floorPanel.getGui());
-        root.setAlignment(Pos.TOP_CENTER);
-        root.setPadding(new Insets(24));
-        root.setStyle("-fx-background-color: #f8f8f8;");
-
-        Stage floorStage = new Stage();
-        floorStage.setTitle("Floor Panel");
-        floorStage.setScene(new Scene(root, 350, 425));
-        floorStage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
+        List<String> commands = Files.readAllLines(testScript);
+        try (Manager manager = new Manager(ip, port)) {
+            manager.run(commands);
+        }
     }
 }
