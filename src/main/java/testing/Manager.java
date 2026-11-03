@@ -19,6 +19,9 @@ public class Manager implements AutoCloseable {
     private final OutputStream out;
     private final Set<Subscription> subscriptions = new HashSet<>();
 
+    // used for local messages
+    private final Map<Subscription, Deque<Message>> pendingMessages = new HashMap<>();
+
     // panel references
     private final Map<Integer, ElevatorPanel> elevatorPanels = new HashMap<>();
     private final Map<Integer, FloorPanel> floorPanels = new HashMap<>();
@@ -62,7 +65,7 @@ public class Manager implements AutoCloseable {
                 case "SUBSCRIBE" -> subscribe(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
                 case "POST" -> publish(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Long.parseLong(parts[3]));
                 case "GET" -> getAndDistribute(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-                case "SLEEP" -> Thread.sleep(Long.parseLong(parts[1]));
+                case "PAUSE" -> Thread.sleep(Long.parseLong(parts[1]));
                 default -> throw new IllegalArgumentException("Unknown Command: " + parts[0]);
             }
         }
@@ -82,7 +85,9 @@ public class Manager implements AutoCloseable {
      */
     private synchronized void publish(int topic, int subtopic, long value) throws IOException {
         try {
-            Protocol.writeMessage(out, Message.of(topic, subtopic, value));
+            Message message = Message.of(topic, subtopic, value);
+            Protocol.writeMessage(out, message);
+            queueMessage(message);
             System.out.printf("Posted: %d to %d:%d%n", value, topic, subtopic);
         } catch (IOException e) {
             System.err.println("Could not publish event: " + e.getMessage());
@@ -94,9 +99,66 @@ public class Manager implements AutoCloseable {
      */
     private synchronized void getAndDistribute(int topic, int subtopic) throws IOException {
         Protocol.writeMessage(out, Message.of(Protocol.GET, topic, subtopic));
-        Message message = Protocol.readMessage(in);
-        if (message == null) throw new IOException("Disconnected from Bus");
-        if (message.topic() != Protocol.NO_MESSAGE) Platform.runLater(() -> distribute(message));
+        Message busMessage = Protocol.readMessage(in);
+        if (busMessage == null) throw new IOException("Disconnected from Bus");
+
+        Message message = busMessage;
+        if (busMessage.topic() == Protocol.NO_MESSAGE) {
+            message = takeMessage(topic, subtopic);
+        } else {
+            discardMessage(busMessage);
+        }
+
+        if (message != null && message.topic() != Protocol.NO_MESSAGE) {
+            Message finalMessage = message;
+            Platform.runLater(() -> distribute(finalMessage));
+        }
+    }
+
+    // queue script messages for a same client fallback for get statements
+    private void queueMessage(Message message){
+        if (!isPanelTopic(message.topic())) return;
+        Subscription channel = new Subscription(message.topic(), message.subtopic());
+        pendingMessages.computeIfAbsent(channel, ignored -> new ArrayDeque<>()).addLast(message);
+    }
+
+    // ensure that a topic is relevant to panels or exists
+    private boolean isPanelTopic(int topic) {
+        return switch (topic) {
+            case CAR_BUTTON_RESET, CAR_DING, CAR_BUZZER,
+                 CAR_FLOOR_DISPLAY, CAR_DIRECTION_DISPLAY,
+                 FLOOR_DING, HALL_REQUEST_STATE, ELEVATOR_STATUS -> true;
+            default -> false;
+        };
+    }
+
+    // return the locally published controller message
+    private Message takeMessage(int topic, int subtopic) {
+        Subscription channel = new Subscription(topic, subtopic);
+        Deque<Message> messages = pendingMessages.get(channel);
+        if (messages == null || messages.isEmpty()) return null;
+
+        Message message = messages.removeFirst();
+        if (messages.isEmpty()) pendingMessages.remove(channel);
+        return message;
+    }
+
+    // get rid of the received messages that are no longer needed
+    private void discardMessage(Message received) {
+        Subscription channel = new Subscription(received.topic(), received.subtopic());
+        Deque<Message> messages = pendingMessages.get(channel);
+        if (messages == null) return;
+
+        Iterator<Message> iterator = messages.iterator();
+        while (iterator.hasNext()) {
+            Message pending = iterator.next();
+            if (pending.topic() == received.topic() && pending.subtopic() == received.subtopic()
+                    && pending.value() == received.value()) {
+                iterator.remove();
+                break;
+            }
+        }
+        if (messages.isEmpty()) pendingMessages.remove(channel);
     }
 
     /**
