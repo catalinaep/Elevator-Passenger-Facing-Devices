@@ -1,3 +1,9 @@
 [submodule "Software_Bus"]
 	path = Software_Bus
 	url = git@github.com:Wallyhoo/CS460_T03_ElevatorProject.git
+[submodule "Command_Center"]
+	path = Command_Center
+	url = https://github.com/bivek2003/Elevator_System_CMD.git
+[submodule "Elevator_Door_Assembly"]
+	path = Elevator_Door_Assembly
+	url = https://github.com/chuongng25/CS460-Elevator-Door.git
