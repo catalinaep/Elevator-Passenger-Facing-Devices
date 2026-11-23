@@ -90,21 +90,3 @@ For all the `HALL` and `FLOOR` topics, the subtopic is the floor number. Valid v
 | 0 | `IDLE` |
 | 1 | `UP` |
 | 2 | `DOWN` |
-
-### Elevator status packing
-
-For topic `23`, the subtopic is the elevator number. Pack its current floor and direction into `value`:
-
-```text
-value = (currentFloor << 2) | directionValue
-```
-
-For example, elevator 1 at floor 3 going up is:
-
-```text
-topic = 23
-subtopic = 1
-value = (3 << 2) | 1 = 13
-```
-
-The manager updates every registered floor panel with this elevator status.
